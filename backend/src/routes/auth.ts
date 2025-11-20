@@ -111,4 +111,48 @@ router.post("/verify-otp", async (req, res) => {
   }
 });
 
+
+// MFA
+
+router.post("/request-mfa", async (req, res) => {
+  const { email, sessionJwt } = req.body;
+  if (!email || !sessionJwt)
+    return res.status(400).json({ error: "email + sessionJwt required" });
+
+  try {
+    const response = await axios.post(
+      `${DYNAMIC_API}/auth/headless/mfa/request`,
+      { email, environmentId: ENV_ID },
+      { headers: { Authorization: `Bearer ${API_KEY}`, "X-Dynamic-Session": sessionJwt } }
+    );
+
+    // Returns available MFA methods (e.g., sms, authenticator)
+    return res.json({ ok: true, methods: response.data.methods });
+  } catch (err: any) {
+    console.error("request-mfa error:", err.response?.data || err.message);
+    return res.status(500).json({ error: "request-mfa-failed" });
+  }
+});
+
+
+router.post("/verify-mfa", async (req, res) => {
+  const { email, sessionJwt, code, method } = req.body;
+  if (!email || !sessionJwt || !code || !method)
+    return res.status(400).json({ error: "email + sessionJwt + code + method required" });
+
+  try {
+    const verify = await axios.post(
+      `${DYNAMIC_API}/auth/headless/mfa/verify`,
+      { email, code, method },
+      { headers: { Authorization: `Bearer ${API_KEY}`, "X-Dynamic-Session": sessionJwt } }
+    );
+
+    // MFA verified successfully
+    return res.json({ ok: true, verified: verify.data.verified });
+  } catch (err: any) {
+    console.error("verify-mfa error:", err.response?.data || err.message);
+    return res.status(500).json({ error: "verify-mfa-failed" });
+  }
+});
+
 export default router;
