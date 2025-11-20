@@ -10,6 +10,6 @@ export interface VerifyResponse {
     isValid: boolean;
     signer: string;
     originalMessage: string;
-    Signature?: string;
+    signature?: string;
     sessionJwt?: string;
 }
