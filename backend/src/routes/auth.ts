@@ -1,5 +1,3 @@
-// David Wang @david9511@gmail.com
-
 import express from "express";
 import axios from "axios";
 import dotenv from "dotenv";
@@ -17,13 +15,11 @@ if (!API_KEY || !ENV_ID) {
   console.warn("DYNAMIC_API_KEY or DYNAMIC_ENV_ID not set. Demo mode:", DEMO_MODE);
 }
 
-// In-memory demo store
 const demoOtpStore: Record<string, string> = {};
 const demoSessionStore: Record<string, { address: string; providerRpcUrl: string; sessionJwt: string }> = {};
 
 router.post("/request-otp", async (req, res) => {
   const { email } = req.body;
-  console.log(email);
   if (!email) return res.status(400).json({ error: "email required" });
 
   // Demo mode
@@ -49,7 +45,6 @@ router.post("/request-otp", async (req, res) => {
     return res.status(500).json({ error: "request-otp-failed" });
   }
 });
-
 
 router.post("/verify-otp", async (req, res) => {
   const { email, otp } = req.body;
@@ -90,12 +85,9 @@ router.post("/verify-otp", async (req, res) => {
       return res.status(500).json({ error: "invalid-verify-response" });
     }
 
-    // Request provider RPC endpoint bound to the session
+    // Request provider RPC endpoint
     const providerRes = await axios.get(`${DYNAMIC_API}/wallet/provider`, {
-      headers: {
-        Authorization: `Bearer ${API_KEY}`,
-        "X-Dynamic-Session": sessionJwt,
-      },
+      headers: { Authorization: `Bearer ${API_KEY}`, "X-Dynamic-Session": sessionJwt },
     });
 
     const providerRpcUrl = providerRes.data?.rpcEndpoint;
@@ -112,12 +104,9 @@ router.post("/verify-otp", async (req, res) => {
 });
 
 
-// MFA
-
 router.post("/request-mfa", async (req, res) => {
   const { email, sessionJwt } = req.body;
-  if (!email || !sessionJwt)
-    return res.status(400).json({ error: "email + sessionJwt required" });
+  if (!email || !sessionJwt) return res.status(400).json({ error: "email + sessionJwt required" });
 
   try {
     const response = await axios.post(
@@ -126,7 +115,6 @@ router.post("/request-mfa", async (req, res) => {
       { headers: { Authorization: `Bearer ${API_KEY}`, "X-Dynamic-Session": sessionJwt } }
     );
 
-    // Returns available MFA methods (e.g., sms, authenticator)
     return res.json({ ok: true, methods: response.data.methods });
   } catch (err: any) {
     console.error("request-mfa error:", err.response?.data || err.message);
@@ -137,8 +125,7 @@ router.post("/request-mfa", async (req, res) => {
 
 router.post("/verify-mfa", async (req, res) => {
   const { email, sessionJwt, code, method } = req.body;
-  if (!email || !sessionJwt || !code || !method)
-    return res.status(400).json({ error: "email + sessionJwt + code + method required" });
+  if (!email || !sessionJwt || !code || !method) return res.status(400).json({ error: "email + sessionJwt + code + method required" });
 
   try {
     const verify = await axios.post(
@@ -147,7 +134,6 @@ router.post("/verify-mfa", async (req, res) => {
       { headers: { Authorization: `Bearer ${API_KEY}`, "X-Dynamic-Session": sessionJwt } }
     );
 
-    // MFA verified successfully
     return res.json({ ok: true, verified: verify.data.verified });
   } catch (err: any) {
     console.error("verify-mfa error:", err.response?.data || err.message);

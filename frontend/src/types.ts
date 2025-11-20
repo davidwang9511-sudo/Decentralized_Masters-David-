@@ -11,4 +11,5 @@ export interface VerifyResponse {
     signer: string;
     originalMessage: string;
     Signature?: string;
+    sessionJwt?: string;
 }
