@@ -67,7 +67,7 @@ function useProvideWallet(): WalletContextType {
     localStorage.setItem("signHistory", JSON.stringify(history));
   }, [history]);
 
-  // Call backend to request OTP
+
   async function requestOtp() {
     try {
       await api.post("/auth/request-otp", { email });
@@ -78,12 +78,12 @@ function useProvideWallet(): WalletContextType {
     }
   }
 
-  // Call backend to verify OTP and connect wallet
+
   async function verifyOtp() {
     try {
       const res = await api.post("/auth/verify-otp", { email, otp });
       setAddress(res.data.address);
-      setProvider(new ethers.BrowserProvider(window.ethereum)); // or any provider from backend
+      setProvider(new ethers.BrowserProvider(window.ethereum));
       alert("Wallet connected!");
     } catch (err) {
       console.error(err);
@@ -91,7 +91,6 @@ function useProvideWallet(): WalletContextType {
     }
   }
 
-  // Sign a message
   async function signMessage(message: string) {
     if (!message) return alert("Enter a message");
 
@@ -104,7 +103,6 @@ function useProvideWallet(): WalletContextType {
 
       console.log(signature)
 
-      // Send to backend to verify
       const res = await api.post("/verify-signature", { message, signature });
       setLastResult({...res.data, signature: signature});
 
